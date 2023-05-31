@@ -1,0 +1,23 @@
+Header set X-Robots-Tag "noindex, nofollow"
+
+Header set Access-Control-Allow-Headers "*"
+Header set Access-Control-Allow-Methods "*"
+Header set Access-Control-Allow-Origin "*"
+
+Options -MultiViews -Indexes
+
+RewriteEngine On
+
+# redirect /path/file.php to /path/file
+
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s([^.]+)\.php [NC]
+RewriteRule ^ %1 [R,L]
+
+# redirect any call to index.php
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} (.+)/$
+RewriteRule ^ %1 [L,R=301]
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L]
