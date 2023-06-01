@@ -281,12 +281,12 @@ class Normalize
             $return = [];
             foreach ($data as $current) {
                 if ($current) {
-                    $return[] = static::single($current, $filters);
+                    $return[] = self::single($current, $filters);
                 }
             }
             return $return;
         }
-        return static::single($data, $filters);
+        return self::single($data, $filters);
     }
 
     // utils -------------------------------------------------------------------

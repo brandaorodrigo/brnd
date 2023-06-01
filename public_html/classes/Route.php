@@ -84,7 +84,7 @@ class Route
         return $return;
     }
 
-    public static function execute(string $folder): void
+    public static function execute(string $folder): string
     {
         $scheme = [];
         $files = self::files($folder);
@@ -124,19 +124,14 @@ class Route
             }
         }
 
-        if (count($files) > 1) {
-            http_response_code(409);
-            return;
-        }
-
-        if (!count($files)) {
+        if (count($files) !== 1) {
             http_response_code(404);
-            return;
+            return $folder . DIRECTORY_SEPARATOR . '404.php';
         }
 
         self::$include = current($files);
 
-        include self::$include['file'];
+        return self::$include['file'];
     }
 
     // utils -------------------------------------------------------------------

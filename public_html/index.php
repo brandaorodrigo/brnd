@@ -1,9 +1,5 @@
 <?php
 
-// config
-
-require 'config.php';
-
 // locale
 
 setlocale(LC_ALL, 'pt_BR');
@@ -33,19 +29,21 @@ header('Access-Control-Allow-Headers: *');
 header('Access-Control-Allow-Methods: *');
 header('Access-Control-Allow-Origin: *');
 
-// includes
+// config
 
 include 'config.php';
 
-include 'classes/DB.php';
-include 'classes/Normalize.php';
-include 'classes/Route.php';
-include 'classes/Validate.php';
+// classes
+
+require 'classes/DB.php';
+require 'classes/Normalize.php';
+require 'classes/Route.php';
+require 'classes/Validate.php';
 
 // app
 
-include 'app.php';
+require 'app.php';
 
 // route
 
-Route::execute(__DIR__ . DIRECTORY_SEPARATOR . 'routes');
+@include Route::execute(__DIR__ . DIRECTORY_SEPARATOR . 'routes');

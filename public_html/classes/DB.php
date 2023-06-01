@@ -2,42 +2,49 @@
 
 class DB
 {
-    private static $pdo;
 
-    private static function exception(string $message): never
+    public static $pdo;
+
+    public static function config()
     {
-        throw new \Exception($message);
+        global $_DB;
+        return $_DB;
     }
 
-    private static function connect(): \PDO
+    public static function connect(): \PDO
     {
         if (!static::$pdo) {
-            global $_DB;
             try {
-                $dsn = 'sqlsrv:Server=' . $_DB['host'] . ($_DB['port'] ? ',' . $_DB['port'] : '') . ';Database=' . $_DB['base'];
-                static::$pdo = new \PDO($dsn, $_DB['user'], $_DB['pass']);
+                $db = static::config();
+                if ($db['type'] == 'mysql') {
+                    $dsn = 'mysql:host=' . $db['host'] . ($db['port'] ?? ';port=' . $db['port']) . ';dbname=' . $db['base'];
+                }
+                if ($db['type'] == 'sqlsrv') {
+                    $dsn = 'sqlsrv:Server=' . $db['host'] . ($db['port'] ?? ',' . $db['port']) . ';Database=' . $db['base'];
+                }
+                static::$pdo = new \PDO($dsn, $db['user'], $db['pass']);
             } catch (\PDOException $exception) {
-                static::exception($exception->getMessage());
+                self::exception($exception->getMessage());
             }
-            if (@$_DB['debug']) {
+            if (@$db['debug']) {
                 $mode = \PDO::ATTR_ERRMODE;
                 $exception = \PDO::ERRMODE_EXCEPTION;
                 static::$pdo->setAttribute($mode, $exception);
             }
             static::$pdo->setAttribute(\PDO::SQLSRV_ATTR_DIRECT_QUERY, true);
             $sql = 'SET DATEFORMAT ymd';
-            static::query($sql);
+            self::query($sql);
         }
         return static::$pdo;
     }
 
     public static function query(string $query, ?array $params = null): ?\PDOStatement
     {
-        $pdo = static::connect();
+        $pdo = self::connect();
         try {
             $statement = $pdo->prepare($query);
         } catch (\PDOException $exception) {
-            static::exception($exception->getMessage());
+            self::exception($exception->getMessage());
         }
         if ($params) {
             $position = 0;
@@ -60,7 +67,7 @@ class DB
         try {
             $statement->execute();
         } catch (\PDOException $exception) {
-            static::exception($exception->getMessage());
+            self::exception($exception->getMessage());
         }
         return $statement ?: null;
     }
@@ -69,7 +76,7 @@ class DB
     {
         $fetch = \PDO::FETCH_ASSOC; // FETCH_OBJ
         $return = [];
-        $statement = static::query($query, $params);
+        $statement = self::query($query, $params);
         if ($statement->columnCount() > 0) {
             while ($row = @$statement->fetch($fetch)) {
                 $return[] = $row;
@@ -80,7 +87,7 @@ class DB
 
     public static function first(string $query, ?array $params = null): array
     {
-        $select = static::select($query, $params);
+        $select = self::select($query, $params);
         if (count($select)) {
             return reset($select);
         }
@@ -89,7 +96,7 @@ class DB
 
     public static function value(string $query, ?array $params = null): ?string
     {
-        $value = static::first($query, $params);
+        $value = self::first($query, $params);
         if ($value) {
             $value = (array) $value;
             return reset($value);
@@ -108,7 +115,7 @@ class DB
         $fields = self::implode(', ', $fields);
         $qms = self::implode(', ', $qms);
         $sql = "INSERT INTO {$table} ({$fields}) VALUES ({$qms})";
-        static::query($sql, $params);
+        self::query($sql, $params);
     }
 
     public static function update(string $table, array $array, string $column, int $id): void
@@ -121,13 +128,13 @@ class DB
         $params[] = $id;
         $set = self::implode(', ', $set);
         $sql = "UPDATE {$table} SET {$set} WHERE {$column} = ?";
-        static::query($sql, $params);
+        self::query($sql, $params);
     }
 
     public static function delete(string $table, string $column, int $id): void
     {
         $sql = "DELETE FROM {$table} WHERE {$column} = ?";
-        static::query($sql, [$id]);
+        self::query($sql, [$id]);
     }
 
     public static function procedure(string $procedure, array $array): array
@@ -139,7 +146,7 @@ class DB
         }
         $set = self::implode(', ', $set);
         $sql = "SET NOCOUNT ON; EXECUTE {$procedure} {$set};";
-        return static::select($sql, $params);
+        return self::select($sql, $params);
     }
 
     public static function lastInsertId(): ?int
@@ -151,6 +158,11 @@ class DB
     public static function disconnect(): never
     {
         static::$pdo = null;
+    }
+
+    private static function exception(string $message): never
+    {
+        throw new \Exception($message);
     }
 
     // utils -------------------------------------------------------------------
