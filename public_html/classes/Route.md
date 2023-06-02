@@ -123,11 +123,11 @@ Route::json(['name' => 'brnd', 'email' => 'brnd@brnd.com'], 403);
 
 ## Execute
 
-`Route::execute(string  $folder):  void`
+`Route::execute(string  $folder):  string`
 
 The execute method takes a string argument folder and executes a PHP file based on the current URL path and request method. It first extracts the segments of the path using explode() and adds them to a list of possible PHP file names based on the directory specified in folder. It then iterates over this list and includes the first file that exists. If no file is found, it sets the HTTP response code to 404.
 _This method need to be executed only one time in the main file of the web site_
 
 ```php
-Route::execute(__DIR__ . DIRECTORY_SEPARATOR . 'routes');
+include Route::execute(__DIR__ . DIRECTORY_SEPARATOR . 'routes');
 ```

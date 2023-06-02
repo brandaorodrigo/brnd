@@ -46,4 +46,9 @@ require 'app.php';
 
 // route
 
-@include Route::execute(__DIR__ . DIRECTORY_SEPARATOR . 'routes');
+function route()
+{
+    @include Route::execute(__DIR__ . DIRECTORY_SEPARATOR . 'routes');
+}
+
+route();

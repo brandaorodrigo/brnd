@@ -17,12 +17,11 @@ class DB
             try {
                 $db = static::config();
                 if ($db['type'] == 'mysql') {
-                    $dsn = 'mysql:host=' . $db['host'] . ($db['port'] ?? ';port=' . $db['port']) . ';dbname=' . $db['base'];
+                    $dsn = 'mysql:host=' . $db['server'] . (@$db['port'] ? ';port=' . $db['port'] : '') . ';dbname=' . $db['database'];
+                } else {
+                    $dsn = 'sqlsrv:Server=' . $db['server'] . (@$db['port'] ? ',' . $db['port'] : '') . ';Database=' . $db['database'];
                 }
-                if ($db['type'] == 'sqlsrv') {
-                    $dsn = 'sqlsrv:Server=' . $db['host'] . ($db['port'] ?? ',' . $db['port']) . ';Database=' . $db['base'];
-                }
-                static::$pdo = new \PDO($dsn, $db['user'], $db['pass']);
+                static::$pdo = new \PDO($dsn, $db['username'], $db['password']);
             } catch (\PDOException $exception) {
                 self::exception($exception->getMessage());
             }
@@ -162,7 +161,11 @@ class DB
 
     private static function exception(string $message): never
     {
-        throw new \Exception($message);
+        $db = static::config();
+        if (@$db['debug']) {
+            throw new \Exception($message);
+        }
+        exit();
     }
 
     // utils -------------------------------------------------------------------

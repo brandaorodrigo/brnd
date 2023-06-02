@@ -57,6 +57,11 @@ class Route
         return (array)@json_decode(file_get_contents('php://input'), true) ?: [];
     }
 
+    public static function request(): array
+    {
+        return array_merge(self::headers(), self::body(), $_REQUEST);
+    }
+
     public static function json(?array $array = null, int $code = 200): void
     {
         header('Access-Control-Allow-Headers: *');

@@ -5,9 +5,9 @@ global $_DB;
 $_DB = [
     'debug' => true,
     'type' => 'sqlsrv', // mysql | sqlsrv
-    'host' => 'localhost',
+    'server' => 'localhost',
     'port' => '',
-    'user' => 'user',
-    'pass' => 'pass',
-    'base' => 'base',
+    'username' => 'user',
+    'password' => 'pass',
+    'database' => 'base',
 ];

@@ -130,9 +130,7 @@ $output = Normalize::prefix(Normalize::currency(14.12), 'R$ ');
 ### Encrypt
 
 - decode:**key_value**
-- decodeArray:**key_value**
 - encode:**key_value**
-- encodeArray:**key_value**
 
 ### Base64
 

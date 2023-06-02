@@ -226,18 +226,6 @@ class Normalize
         return $return;
     }
 
-    public static function encodeArray(array $array, string $param): string
-    {
-        $array = self::implode('|', $array);
-        return self::encode($array, $param);
-    }
-
-    public static function decodeArray(string $string, string $param): array
-    {
-        $string = self::decode($string, $param);
-        return explode('|', $string);
-    }
-
     // filter / base64 ---------------------------------------------------------
 
     public static function imageBase64(string $url): ?string
@@ -291,7 +279,7 @@ class Normalize
 
     // utils -------------------------------------------------------------------
 
-    private static function implode(string $glue, array $array): string
+    public static function implode(string $glue, array $array): string
     {
         $return = '';
         foreach ($array as $a) {
