@@ -2,8 +2,7 @@
 
 class Route
 {
-
-    private static $include;
+    private static $routes;
 
     public static function path(string $position = null): ?string
     {
@@ -26,117 +25,116 @@ class Route
             return @explode('/', $path)[$position - 1] ?: null;
         }
 
-        if (!@self::$include['path']) {
-            return null;
-        }
-
-        foreach (self::$include['path'] as $key => $value) {
-            if (mb_strtolower('$' . $position) === mb_strtolower($value)) {
-                return @explode('/', $path)[$key] ?: null;
-            }
-        }
-
         return null;
     }
 
-    public static function headers(): array
+    private static function fragment(): array
     {
-        $headers = [];
-        foreach ($_SERVER as $key => $value) {
-            if (substr($key, 0, 5) <> 'HTTP_') {
-                continue;
-            }
-            $header = strtolower(str_replace([' ', '_'], '-', substr($key, 5)));
-            $headers[$header] = $value;
-        }
-        return $headers;
-    }
-
-    public static function body(): array
-    {
-        return (array)@json_decode(file_get_contents('php://input'), true) ?: [];
-    }
-
-    public static function request(): array
-    {
-        return array_merge(self::headers(), self::body(), $_REQUEST);
-    }
-
-    public static function json(?array $array = null, int $code = 200): void
-    {
-        header('Access-Control-Allow-Headers: *');
-        header('Access-Control-Allow-Methods: *');
-        header('Access-Control-Allow-Origin: *');
-        header('Content-type: application/json; charset=utf-8');
-        http_response_code($code);
-        if ($array) {
-            echo html_entity_decode(json_encode($array)) ?: '{}';
-        }
-        exit();
-    }
-
-    private static function files(string $folder, array &$return = [])
-    {
-        $files = scandir($folder);
-        foreach ($files as $value) {
-            $path = realpath($folder . DIRECTORY_SEPARATOR . $value);
-            if (!is_dir($path)) {
-                $return[] = $path;
-            } else if ($value != "." && $value != "..") {
-                self::files($path, $return);
-            }
-        }
-        return $return;
-    }
-
-    public static function execute(string $folder): string
-    {
-        $scheme = [];
-        $files = self::files($folder);
-        foreach ($files as &$file) {
-            $search = [$folder, '.php', '_', '.', '\\'];
-            $replace = ['', '', '/', '/', '/'];
-            $clean = str_replace($search, $replace, $file);
-            @[$fix, $method] = explode('--', $clean);
-            $path = explode('/', trim($fix, '/'));
-            $method = mb_strtoupper($method ?: 'ANY');
-            $scheme[$method][] = ['path' => $path, 'file' => $file];
-        }
-
-        $files = array_merge(
-            @$scheme['ANY'] ?: [],
-            @$scheme[$_SERVER['REQUEST_METHOD']] ?: []
-        );
-
         $path = self::path();
-        $path =  explode('/', $path);
+        return explode('/', $path);
+    }
+
+    private static function register(string $method, string $uri, callable $callback, ?callable $then = null): void
+    {
+        self::$routes[mb_strtolower($method)][] = [
+            'fragment' => explode('/', trim($uri, '/')),
+            'callback' => $callback,
+            'then' => $then
+        ];
+    }
+
+    public static function get(string $uri, callable $callback, ?callable $then = null): void
+    {
+        self::register('get', $uri, $callback, $then);
+    }
+
+    public static function post(string $uri, callable $callback, ?callable $then = null): void
+    {
+        self::register('post', $uri, $callback, $then);
+    }
+
+    public static function put(string $uri, callable $callback, ?callable $then = null): void
+    {
+        self::register('put', $uri, $callback, $then);
+    }
+
+    public static function patch(string $uri, callable $callback, ?callable $then = null): void
+    {
+        self::register('patch', $uri, $callback, $then);
+    }
+
+    public static function delete(string $uri, callable $callback, ?callable $then = null): void
+    {
+        self::register('delete', $uri, $callback, $then);
+    }
+
+    public static function include(string $folder): void
+    {
+        $path = explode('/', self::path());
         if (reset($path) == '') {
             $path = ['index'];
         }
 
-        foreach ($files as $key => $file) {
-            if (count($file['path']) !== count($path)) {
-                unset($files[$key]);
+        $files = [];
+
+        for ($i = count($path); $i > 0; $i--) {
+            $current = [];
+            for ($j = 0; $j < $i; $j++) {
+                $current[] = $path[$j];
+            }
+            $files[] = self::implode(DIRECTORY_SEPARATOR, $current) . '.php';
+            $files[] = self::implode('_', $current) . '.php';
+        }
+
+        foreach ($files as $file) {
+            $file = $folder . DIRECTORY_SEPARATOR . $file;
+            if (file_exists($file)) {
+                include $file;
+                break;
+            }
+        }
+    }
+
+    public static function execute(): void
+    {
+        $path = explode('/', self::path());
+
+        $method = mb_strtolower($_SERVER['REQUEST_METHOD']);
+
+        $routes = @self::$routes[$method] ?: [];
+
+        foreach ($routes as $key => $route) {
+            if (count($route['fragment']) !== count($path)) {
+                unset($routes[$key]);
             }
         }
 
         for ($i = 0; $i < count($path); $i++) {
-            foreach ($files as $key => $file) {
-                @$compare = $file['path'][$i];
+            foreach ($routes as $key => $route) {
+                @$compare = $route['fragment'][$i];
                 if ($compare !== $path[$i] && !stristr($compare, '$')) {
-                    unset($files[$key]);
+                    unset($routes[$key]);
                 }
             }
         }
 
-        if (count($files) !== 1) {
+        if (count($routes) !== 1) {
             http_response_code(404);
-            return $folder . DIRECTORY_SEPARATOR . '404.php';
+            return;
         }
 
-        self::$include = current($files);
+        $include = current($routes);
 
-        return self::$include['file'];
+        $vars = [];
+        foreach ($include['fragment'] as $key => $path) {
+            if (stristr($path, '$')) {
+                $vars[] = self::path($key + 1);
+            }
+        }
+
+        $include['callback'](...$vars);
+
+        exit();
     }
 
     // utils -------------------------------------------------------------------
@@ -144,8 +142,8 @@ class Route
     private static function implode(string $glue, array $array): string
     {
         $return = '';
-        foreach ($array as $a) {
-            $return .= $a . $glue;
+        foreach ($array as $value) {
+            $return .= $value . $glue;
         }
         $return = substr($return, 0, strlen($glue) * -1);
         return $return;

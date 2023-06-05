@@ -226,19 +226,6 @@ class Normalize
         return $return;
     }
 
-    // filter / base64 ---------------------------------------------------------
-
-    public static function imageBase64(string $url): ?string
-    {
-        $type = pathinfo($url, PATHINFO_EXTENSION);
-        @$file = file_get_contents($url);
-        if (!$file) {
-            return null;
-        }
-        return 'data:image/' . $type . ';charset=utf-8;base64,' . base64_encode($file);
-    }
-
-
     // execute -----------------------------------------------------------------
 
     private static function single(array $data, array $filters): array
@@ -277,18 +264,6 @@ class Normalize
         return self::single($data, $filters);
     }
 
-    // utils -------------------------------------------------------------------
-
-    public static function implode(string $glue, array $array): string
-    {
-        $return = '';
-        foreach ($array as $a) {
-            $return .= $a . $glue;
-        }
-        $return = substr($return, 0, strlen($glue) * -1);
-        return $return;
-    }
-
     private static function scheme(array $schemes): array
     {
         foreach ($schemes as $attribute => $scheme) {
@@ -301,5 +276,32 @@ class Normalize
             $schemes[$attribute] = $fix;
         }
         return $schemes;
+    }
+
+    // utils -------------------------------------------------------------------
+
+    public static function implode(string $glue, array $array): string
+    {
+        $return = '';
+        foreach ($array as $value) {
+            $return .= $value . $glue;
+        }
+        $return = substr($return, 0, strlen($glue) * -1);
+        return $return;
+    }
+
+    public static function filter(array $array, array $filter)
+    {
+        return array_intersect_key($array, array_flip($filter));
+    }
+
+    public static function imageBase64(string $url): ?string
+    {
+        $type = pathinfo($url, PATHINFO_EXTENSION);
+        @$file = file_get_contents($url);
+        if (!$file) {
+            return null;
+        }
+        return 'data:image/' . $type . ';charset=utf-8;base64,' . base64_encode($file);
     }
 }

@@ -11,19 +11,16 @@ class DB
         return $_DB;
     }
 
-    public static function connect(): \PDO
+    public static function connect()
     {
         if (!static::$pdo) {
             try {
                 $db = static::config();
-                if ($db['type'] == 'mysql') {
-                    $dsn = 'mysql:host=' . $db['server'] . (@$db['port'] ? ';port=' . $db['port'] : '') . ';dbname=' . $db['database'];
-                } else {
-                    $dsn = 'sqlsrv:Server=' . $db['server'] . (@$db['port'] ? ',' . $db['port'] : '') . ';Database=' . $db['database'];
-                }
+                $dsn = 'sqlsrv:Server=' . $db['server'] . ';Database=' . $db['database'];
                 static::$pdo = new \PDO($dsn, $db['username'], $db['password']);
             } catch (\PDOException $exception) {
                 self::exception($exception->getMessage());
+                return;
             }
             if (@$db['debug']) {
                 $mode = \PDO::ATTR_ERRMODE;
@@ -41,7 +38,7 @@ class DB
     {
         $pdo = self::connect();
         try {
-            $statement = $pdo->prepare($query);
+            $statement = $pdo->prepare($query, [PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL]);
         } catch (\PDOException $exception) {
             self::exception($exception->getMessage());
         }
@@ -71,6 +68,12 @@ class DB
         return $statement ?: null;
     }
 
+    public static function count(string $query, ?array $params = null): int
+    {
+        $statement = self::query($query, $params);
+        return (int)$statement->rowCount();
+    }
+
     public static function select(string $query, ?array $params = null): array
     {
         $fetch = \PDO::FETCH_ASSOC; // FETCH_OBJ
@@ -78,7 +81,7 @@ class DB
         $statement = self::query($query, $params);
         if ($statement->columnCount() > 0) {
             while ($row = @$statement->fetch($fetch)) {
-                $return[] = $row;
+                $return[] = array_change_key_case($row, CASE_LOWER);
             }
         }
         return $return;
@@ -117,7 +120,7 @@ class DB
         self::query($sql, $params);
     }
 
-    public static function update(string $table, array $array, string $column, int $id): void
+    public static function update(string $table, array $array, string $column, string $id): void
     {
         $set = $params = [];
         foreach ($array as $key => $value) {
@@ -130,10 +133,15 @@ class DB
         self::query($sql, $params);
     }
 
-    public static function delete(string $table, string $column, int $id): void
+    public static function delete(string $table, string $column, string $id): void
     {
         $sql = "DELETE FROM {$table} WHERE {$column} = ?";
         self::query($sql, [$id]);
+    }
+
+    public static function exists(string $table, string $column, string $id): bool
+    {
+        return DB::value("SELECT TOP 1 1 FROM {$table} WHERE {$column} = ?", [$id]) ? true : false;
     }
 
     public static function procedure(string $procedure, array $array): array
@@ -154,18 +162,18 @@ class DB
         return $id ? (int) $id : null;
     }
 
-    public static function disconnect(): never
+    public static function disconnect(): void
     {
         static::$pdo = null;
     }
 
-    private static function exception(string $message): never
+    private static function exception(string $message): void
     {
         $db = static::config();
         if (@$db['debug']) {
             throw new \Exception($message);
+            exit();
         }
-        exit();
     }
 
     // utils -------------------------------------------------------------------
@@ -173,8 +181,8 @@ class DB
     private static function implode(string $glue, array $array): string
     {
         $return = '';
-        foreach ($array as $a) {
-            $return .= $a . $glue;
+        foreach ($array as $value) {
+            $return .= $value . $glue;
         }
         $return = substr($return, 0, strlen($glue) * -1);
         return $return;

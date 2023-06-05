@@ -103,16 +103,13 @@ class Validate
         return is_numeric($value) && $value >= $param ? true : false;
     }
 
-    private static function query(string $value, string $param): bool
-    {
-        return DB::value($param, [$value]) ? true : false;
-    }
-
     // execute -----------------------------------------------------------------
 
-    public static function execute(array $data, array $validations, ?array $custom = []): ?string
+    public static function execute(array $data, array $validations, ?array $custom = []): ?array
     {
         $scheme = self::scheme($validations);
+
+        $message = [];
 
         foreach ($scheme as $attribute => $rules) {
             $value = @$data[$attribute];
@@ -121,7 +118,8 @@ class Validate
 
                 if ($rule === 'required') {
                     if ($value !== false && (!is_array($value) && !is_object($value) && trim((string) $value) === '')) {
-                        return self::message($attribute, $value, $rule, $custom, $param);
+                        $message[] = self::message($attribute, $value, $rule, $custom, $param);
+                        break;
                     }
                     continue;
                 }
@@ -135,10 +133,12 @@ class Validate
                     'float',
                     'int',
                     'numeric',
+                    'string',
                 ])) {
                     $function = 'is_' . $rule;
                     if (!$function($value)) {
-                        return self::message($attribute, $value, $rule, $custom, $param);
+                        $message[] = self::message($attribute, $value, $rule, $custom, $param);
+                        break;
                     }
                     continue;
                 }
@@ -151,7 +151,8 @@ class Validate
                     'url',
                 ])) {
                     if (!self::$rule($value)) {
-                        return self::message($attribute, $value, $rule, $custom);
+                        $message[] = self::message($attribute, $value, $rule, $custom);
+                        break;
                     }
                     continue;
                 }
@@ -161,13 +162,13 @@ class Validate
                     'length',
                     'max',
                     'min',
-                    'query',
                 ])) {
                     if (!$param) {
                         throw new \Exception('Required parameter.');
                     }
                     if (!self::$rule($value, $param)) {
-                        return self::message($attribute, $value, $rule, $custom, $param);
+                        $message[] = self::message($attribute, $value, $rule, $custom, $param);
+                        break;
                     }
                     continue;
                 }
@@ -178,7 +179,8 @@ class Validate
                     'time'
                 ])) {
                     if (!self::date($value, $rule)) {
-                        return self::message($attribute, $value, $rule, $custom, $param);
+                        $message[] = self::message($attribute, $value, $rule, $custom, $param);
+                        break;
                     };
                     continue;
                 }
@@ -204,10 +206,12 @@ class Validate
                     $date = self::createDate($value, $found);
                     $compare = self::createDate($param, $found);
                     if ($rule === 'after' && $date < $compare) {
-                        return self::message($attribute, $value, $rule, $custom, $param);
+                        $message[] = self::message($attribute, $value, $rule, $custom, $param);
+                        break;
                     }
                     if ($rule === 'before' && $date > $compare) {
-                        return self::message($attribute, $value, $rule, $custom, $param);
+                        $message[] = self::message($attribute, $value, $rule, $custom, $param);
+                        break;
                     }
                     continue;
                 }
@@ -215,7 +219,7 @@ class Validate
                 throw new \Exception($rule . ' does not exists.');
             }
         }
-        return null;
+        return count($message) ? $message : null;
     }
 
     // utils -------------------------------------------------------------------
@@ -231,29 +235,28 @@ class Validate
     private static function message(string $attribute, $value, string $rule, array $custom, $param = false): string
     {
         $default = [
-            'after' => ':attribute deve ser maior ou igual a :param',
-            'array' => ':attribute inválido',
-            'before' => ':attribute deve ser menor ou igual a :param',
-            'bool' => ':attribute dever ser true ou false',
-            'cnpj' => ':attribute inválido',
-            'cpf' => ':attribute inválido',
-            'date' => ':attribute inválida',
-            'datetime' => ':attribute inválida',
-            'email' => ':attribute inválido',
-            'float' => ':attribute inválido',
-            'fullname' => ':attribute deve ser completo (sem abreviações)',
-            'in' => ':attribute não encontrado',
-            'int' => ':attribute não é um número inteiro',
-            'length' => ':attribute possui tamanho inválido',
-            'max' => ':attribute deve ser menor ou igual a :param',
-            'min' => ':attribute deve ser maior ou igual a :param',
-            'numeric' => ':attribute deve ser um número',
-            'object' => ':attribute inválido',
-            'query' => ':attribute inválido',
-            'required' => ':attribute é obrigatório',
-            'string' => ':attribute inválido',
-            'time' => ':attribute inválida',
-            'url' => ':attribute inválida',
+            'after' => ':attribute must be equal or greater than :param.',
+            'array' => ':attribute invalid',
+            'before' => ':attribute must be equal or lesser than :param.',
+            'bool' => ':attribute must be boolean',
+            'cnpj' => ':attribute invalid',
+            'cpf' => ':attribute invalid',
+            'date' => ':attribute invalid',
+            'datetime' => ':attribute invalid',
+            'email' => ':attribute invalid',
+            'float' => ':attribute invalid',
+            'fullname' => ':attribute must be fullname',
+            'in' => ':attribute not found',
+            'int' => ':attribute is not an integer',
+            'length' => ':attribute has an invalid length',
+            'max' => ':attribute must be less than or equal to :param',
+            'min' => ':attribute must be greater than or equal to :param',
+            'numeric' => ':attribute must be a number',
+            'object' => ':attribute invalid',
+            'required' => ':attribute required',
+            'string' => ':attribute invalid',
+            'time' => ':attribute invalid',
+            'url' => ':attribute invalid',
         ];
         $search = $attribute . '.' . $rule;
         $error = @$custom[$search] ?: @$default[$rule] ?: $search;

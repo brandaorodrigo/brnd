@@ -15,16 +15,16 @@
 @    │   ├── DB.php
 @    |   ├── Normalize.md
 @    │   ├── Normalize.php
+@    │   ├── Request.md
+@    │   ├── Request.php
+@    │   ├── Response.md
+@    │   ├── Response.php
 @    │   ├── Route.md
 @    │   ├── Route.php
 @    |   ├── Validate.md
 @    │   └── Validate.php
-@    └── routes
-+    |   ├── index.php
-+    |   └── example
-+    |       ├── normalize.php
-+    |       ├── route_$.php
-+    |       └── validate--post.php
++    └── routes
+-    |   └── example.php
 @    ├── .htaccess
 +    ├── app.php
 -    ├── config.example.php
@@ -69,6 +69,8 @@ location / {
 
 - [DB](https://github.com/brandaorodrigo/php/blob/master/public_html/classes/DB.md)
 - [Normalize](https://github.com/brandaorodrigo/php/blob/master/public_html/classes/Normalize.md)
+- [Request](https://github.com/brandaorodrigo/php/blob/master/public_html/classes/Request.md)
+- [Response](https://github.com/brandaorodrigo/php/blob/master/public_html/classes/Response.md)
 - [Route](https://github.com/brandaorodrigo/php/blob/master/public_html/classes/Route.md)
 - [Validate](https://github.com/brandaorodrigo/php/blob/master/public_html/classes/Validate.md)
 

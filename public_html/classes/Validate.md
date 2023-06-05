@@ -25,10 +25,9 @@ $_POST = [
     "inExample" => "yellow",
     "lengthExample" => "rrrr",
     "numericExample" => "22.22",
-    "queryExample" => 32
 ];
 
-$invalid = Validate::execute($_POST, [
+$message = Validate::execute($_POST, [
     'idExample' => 'required|numeric|in:22,33',
     'boolExample' => 'bool',
     'cnpjExample' => 'required|cnpj',
@@ -42,13 +41,12 @@ $invalid = Validate::execute($_POST, [
     'intExample' => 'required|int|min:2|max:9',
     'lengthExample' => 'required|length:4',
     'numericExample' => 'required|numeric',
-    'queryExample' => 'required|query:select top 1 user from employee where user = ?',
     'timeExample' => 'time|after:08:00|before:22:00',
     'urlExample' => 'required|url',
 ]);
 
-if ($invalid) {
-    Page::json(['message' => $invalid], 400);
+if ($message) {
+    Response::json(['message' => $message], 400);
 }
 ```
 
@@ -88,4 +86,3 @@ if ($invalid) {
 - length:**99**
 - max:**99**
 - min:**1**
-- query:**select top 1 1 from customer where id = ?**

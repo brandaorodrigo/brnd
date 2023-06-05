@@ -4,7 +4,6 @@ global $_DB;
 
 $_DB = [
     'debug' => true,
-    'type' => 'sqlsrv', // mysql | sqlsrv
     'server' => 'localhost',
     'port' => '',
     'username' => 'user',

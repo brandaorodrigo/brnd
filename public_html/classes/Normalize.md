@@ -132,6 +132,10 @@ $output = Normalize::prefix(Normalize::currency(14.12), 'R$ ');
 - decode:**key_value**
 - encode:**key_value**
 
-### Base64
+## Helpers
 
+This class has a set of extra functions that can be used outside the normalization scheme, but which will help convert and fit data.
+
+- filter
 - imageBase64
+- implode

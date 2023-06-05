@@ -73,7 +73,7 @@ File:
 
 `Route::path(?int $position = null): ?string`
 
-Takes an integer argument position or variable name and returns a string containing a segment of the current URL path. If don't inform a position or name returns the complete current URL path.
+Takes an integer argument position and returns a string containing a segment of the current URL path. If don't inform a position returns the complete current URL path.
 
 ```php
 $found = Route::path();
@@ -84,41 +84,6 @@ $found = Route::path(1);
 
 $found = Route::path(2);
 // if url is http://site.com/customer/data/ the $found will be 'data'
-
-$found = Route::path('uid');
-// if route file is customer_data_$uid.php
-// and url is http://site.com/customer/data/12 the $found will be '12'
-```
-
-## Headers
-
-`Route::headers(): array`
-
-The headers method returns an associative array containing all HTTP headers in the current request.
-
-```php
-$headers = Route::headers();
-```
-
-## Body
-
-`Route::body(): array`
-
-The body method reads the request body from the php://input stream and returns it as a decoded array.
-It assumes that the body contains JSON data and uses json_decode() to convert it to an array.
-
-```php
-$body = Route::body();
-```
-
-## Json
-
-`Route::json(array $array, int $code = 200): void`
-
-The json method takes an associative array argument array and an integer argument code and sends a JSON response to the client with the specified HTTP status code. It encodes the array as JSON using json_encode and outputs it using echo.
-
-```php
-Route::json(['name' => 'brnd', 'email' => 'brnd@brnd.com'], 403);
 ```
 
 ## Execute
