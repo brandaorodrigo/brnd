@@ -67,12 +67,12 @@ location / {
 
 ## Classes
 
-- [DB](https://github.com/brandaorodrigo/php/blob/master/public_html/classes/DB.md)
-- [Normalize](https://github.com/brandaorodrigo/php/blob/master/public_html/classes/Normalize.md)
-- [Request](https://github.com/brandaorodrigo/php/blob/master/public_html/classes/Request.md)
-- [Response](https://github.com/brandaorodrigo/php/blob/master/public_html/classes/Response.md)
-- [Route](https://github.com/brandaorodrigo/php/blob/master/public_html/classes/Route.md)
-- [Validate](https://github.com/brandaorodrigo/php/blob/master/public_html/classes/Validate.md)
+- [DB](https://github.com/brandaorodrigo/brnd/blob/master/public_html/classes/DB.md)
+- [Normalize](https://github.com/brandaorodrigo/brnd/blob/master/public_html/classes/Normalize.md)
+- [Request](https://github.com/brandaorodrigo/brnd/blob/master/public_html/classes/Request.md)
+- [Response](https://github.com/brandaorodrigo/brnd/blob/master/public_html/classes/Response.md)
+- [Route](https://github.com/brandaorodrigo/brnd/blob/master/public_html/classes/Route.md)
+- [Validate](https://github.com/brandaorodrigo/brnd/blob/master/public_html/classes/Validate.md)
 
 ## License
 

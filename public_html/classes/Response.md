@@ -25,7 +25,9 @@ Response::ifNotFound('table', 'column', $id);
 `Response::ifInvalid(array $data, array $validations, ?array $custom = []): void`
 
 ```php
-Response::ifNotFound('table', 'column', $id);
+Response::ifInvalid($request, [
+    'value' => 'required|numeric|min:1',
+]);
 ```
 
 ## Control
@@ -33,5 +35,6 @@ Response::ifNotFound('table', 'column', $id);
 `Response::control(string $query, ?array $params = null): void`
 
 ```php
-Response::control("SELECT * FROM user");
+$sql = "SELECT * FROM user";
+Response::control($sql);
 ```
